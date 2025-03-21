@@ -14,7 +14,7 @@ class WorkdayService
     protected WorkdaysTable $workdays;
     protected VisitsTable $visits;
     protected ?VisitService $visitsService;
-    const DAILYLIMIT = 28800;
+    const DAILYLIMIT = 480; //minutes limit
 
     public function __construct(?VisitService $visitsService = null)
     {
@@ -35,25 +35,31 @@ class WorkdayService
         return $totalDuration >= self::DAILYLIMIT;
     }
 
-    public function updateWorkday(?string $oldDate, ?string $newDate): void
+    public function updateWorkday(string $newDate): void
     {
-        if ($oldDate) {
-            $this->refreshWorkdayStats($oldDate);
-        }
-        if ($newDate) {
-            $this->refreshWorkdayStats($newDate, true);
-        }
+        $this->refreshWorkdayStats($newDate);
     }
 
-    public function updateWorkdayDuration(string $date): void
+    public function updateWorkdayDates(string $oldDate, string $newDate): void
     {
-        $this->refreshWorkdayStats($date);
+        $this->refreshWorkdayStats($oldDate);
+        $this->refreshWorkdayStats($newDate);
     }
 
-    private function refreshWorkdayStats(string $date, bool $createIfNotExists = false): void
+    private function createOrUpdateByDate(string $date): ?object
+    {
+        return $this->workdays->findOrCreate(
+            ['date' => $date],
+            function ($entity) use ($date) {
+                $entity->date = $date;
+            }
+        );
+    }
+
+    private function refreshWorkdayStats(string $date): void
     {
         $date = $this->normalizeDate($date);
-        $workday = $this->findOrCreateWorkday($date, $createIfNotExists);
+        $workday = $this->createOrUpdateByDate($date);
 
         $workday->visits = $this->countTotalVisits($date);
         $workday->completed = $this->countCompletedVisits($date);
@@ -65,12 +71,6 @@ class WorkdayService
     private function normalizeDate(string $date): string
     {
         return Chronos::parse($date)->toDateString();
-    }
-
-    private function findOrCreateWorkday(string $date, bool $createIfNotExists): ?object
-    {
-        $workday = $this->workdays->find()->where(['date' => $date])->first();
-        return $workday ?: ($createIfNotExists ? $this->workdays->newEntity(['date' => $date]) : null);
     }
 
     private function countTotalVisits(string $date)
@@ -102,4 +102,3 @@ class WorkdayService
         return $this->workdays->find()->where(['date' => $this->normalizeDate($date)])->first();
     }
 }
-

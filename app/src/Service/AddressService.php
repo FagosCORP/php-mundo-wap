@@ -35,6 +35,11 @@ class AddressService
     {
         $this->addresses->deleteAll(['foreign_id' => $visitId, 'foreign_table' => 'visits']);
 
+        $this->createAddress($visitId, $addressData);
+    }
+
+    public function createAddress(int $visitId, array $addressData): void
+    {
         $addressData = Hash::merge($addressData, [
             'foreign_id' => $visitId,
             'foreign_table' => 'visits'

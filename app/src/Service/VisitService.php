@@ -23,9 +23,10 @@ class VisitService
         $this->addressService = new AddressService();
         $this->workdayService = $workdayService;
     }
+
     private function calculateDuration(int $forms, int $products): int
     {
-        return ($forms * 15 * 60) + ($products * 5 * 60);
+        return ($forms * 15) + ($products * 5);
     }
 
     private function validateDailyLimit(string $date, int $duration, bool $completed)
@@ -49,12 +50,10 @@ class VisitService
             $this->visits->saveOrFail($visit);
 
             if (!empty($data['address'])) {
-                $this->addressService->updateAddress($visit->id, $data['address']);
+                $this->addressService->createAddress($visit->id, $data['address']);
             }
 
-            $this->workdayService->updateWorkday(null, $data['date'], $visitData['duration']);
-            $this->workdayService->updateWorkdayDuration($data['date']);
-
+            $this->workdayService->updateWorkday($data['date']);
             return $visit;
         });
     }
@@ -80,14 +79,14 @@ class VisitService
             $this->visits->saveOrFail($visit);
 
             if ($newDate && $newDate !== $oldDate) {
-                $this->workdayService->updateWorkday($oldDate, $newDate);
+                $this->workdayService->updateWorkdayDates($oldDate, $newDate);
             }
 
             if (!empty($data['address'])) {
                 $this->addressService->updateAddress($visit->id, $data['address']);
             }
 
-            $this->workdayService->updateWorkdayDuration($newDate ?? $oldDate);
+            $this->workdayService->updateWorkday($newDate ?? $oldDate);
             return $visit;
         });
     }
@@ -126,7 +125,7 @@ class VisitService
         $results = [];
         foreach ($visits as $visit) {
             $currentDate = clone $startDate;
-            $maxAttempts = 365;
+            $maxAttempts = 30;
             $allocated = false;
 
             for ($i = 0; $i < $maxAttempts; $i++) {
@@ -134,19 +133,20 @@ class VisitService
 
                 if ($hasLimitDaily) {
                     $visit->date = $currentDate;
-                    if ($this->visits->save($visit)) {
-                        $results[] = ['id' => $visit->id, 'new_date' => $currentDate->format('Y-m-d')];
-                        $allocated = true;
-                        break;
-                    }
+
+                    $this->visits->save($visit);
+                    $results[] = ['id' => $visit->id, 'new_date' => $currentDate->format('Y-m-d')];
+                    $allocated = true;
+                    break;
                 }
                 $currentDate = $currentDate->addDays(1);
             }
 
             if (!$allocated) {
-                throw new Exception("Não foi possível alocar a visita {$visit->id} em 1 ano");
+                throw new Exception("Não foi possível alocar a visita {$visit->id} em 30 dias.");
             }
         }
+        $this->workdayService->updateWorkday($startDate->subDays(1)->toDateString());
         return $results;
     }
 
