@@ -59,9 +59,14 @@ class WorkdayService
     private function refreshWorkdayStats(string $date): void
     {
         $date = $this->normalizeDate($date);
-        $workday = $this->createOrUpdateByDate($date);
+        $totalVisits = $this->countTotalVisits($date);
 
-        $workday->visits = $this->countTotalVisits($date);
+        if (!$totalVisits) {
+            return;
+        }
+
+        $workday = $this->createOrUpdateByDate($date);
+        $workday->visits = $totalVisits;
         $workday->completed = $this->countCompletedVisits($date);
         $workday->duration = $this->calculateTotalDuration($date);
 
