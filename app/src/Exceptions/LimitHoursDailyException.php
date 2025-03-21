@@ -2,11 +2,11 @@
 
 namespace App\Exceptions;
 
-use App\Controller\Enum\HttpStatusCode\ErrorStatus;
+use App\Controller\Enum\HttpStatusCode\HttpStatusCode;
 use Exception;
 
 class LimitHoursDailyException extends Exception
 {
     protected $message = 'Limite de horas atingidos.';
-    protected $code = ErrorStatus::BAD_REQUEST;
+    protected $code = HttpStatusCode::BAD_REQUEST;
 }

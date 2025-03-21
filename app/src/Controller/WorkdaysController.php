@@ -4,68 +4,41 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Controller\Enum\HttpStatusCode\ErrorStatus;
-use App\Controller\Enum\HttpStatusCode\SuccessStatus;
-use App\Controller\Traits\JsonResponseTrait;
-use App\Service\VisitService;
-use App\Service\WorkdayService;
-use Exception;
+use App\Controller\Traits\ApiResponseTrait;
+use App\Service\Visits\RemaningVisit;
+use App\Service\Workday\GetWorkday;
+use Cake\Http\Response;
+use Cake\Validation\Validator;
 
 class WorkdaysController extends AppController
 {
-
-    use JsonResponseTrait;
-
-    protected WorkdayService $workdayService;
-
+    use ApiResponseTrait;
 
     public function initialize(): void
     {
         parent::initialize();
-        $this->workdayService = new WorkdayService();
     }
 
-    public function index()
+    public function index(GetWorkday $getWorkday): Response
     {
-        try {
-            $workdays = $this->workdayService->getAll();
-            return $this->jsonResponse(
-                SuccessStatus::OK,
-                [
-                    'data' => $workdays
-                ]
-            );
-        } catch (Exception $e) {
-            return $this->jsonResponse(
-                ErrorStatus::BAD_REQUEST,
-                [
-                    'status' => 'error',
-                    'message' => $e->getMessage()
-                ]
-            );
-        };
+        return $this->successResponse($getWorkday->getAll());
     }
 
-    public function closeDay()
+    public function closeDay(RemaningVisit $remaningVisit): Response
     {
-        try {
-            $visitService = new VisitService($this->workdayService);
 
-            $date = $this->request->getQuery('date');
-            $redestributedVisits = $visitService->redistributeVisits($date);
+        $date = $this->request->getQuery('date');
 
-            return $this->jsonResponse(
-                SuccessStatus::CREATED,
-                ['data' => $redestributedVisits]
-            );
-        } catch (Exception $e) {
-            return $this->jsonResponse(
-                ErrorStatus::BAD_REQUEST,
-                [
-                    'status' => 'error',
-                    'message' => $e->getMessage()
-                ]
-            );
-        };
+        $validator = $this->Workdays->validationDateParam(new Validator());
+        $errors = $validator->validate(['date' => $date]);
+
+        $errors = $this->validateRequest($validator);
+        if (!empty($errors)) {
+            return $this->validationErrorResponse($errors);
+        }
+
+        return $this->handleServiceCall(
+            fn() => $remaningVisit->excute($date)
+        );
     }
 }

@@ -26,12 +26,6 @@ use Cake\Validation\Validator;
  */
 class WorkdaysTable extends Table
 {
-    /**
-     * Initialize method
-     *
-     * @param array $config The configuration for the Table.
-     * @return void
-     */
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -41,12 +35,6 @@ class WorkdaysTable extends Table
         $this->setPrimaryKey('id');
     }
 
-    /**
-     * Default validation rules.
-     *
-     * @param \Cake\Validation\Validator $validator Validator instance.
-     * @return \Cake\Validation\Validator
-     */
     public function validationDefault(Validator $validator): Validator
     {
         $validator
@@ -69,7 +57,16 @@ class WorkdaysTable extends Table
         return $validator;
     }
 
-    //mudar para ingles
+    public function validationDateParam(Validator $validator): Validator
+    {
+        $validator
+            ->date('date', ['ymd'], 'Formato inválido (YYYY-MM-DD)')
+            ->requirePresence('date', 'create', 'A data é obrigatória.')
+            ->notEmptyString('date', 'A data não pode ser vazia.');
+
+        return $validator;
+    }
+
     public function validationRequest(Validator $validator): Validator
     {
         $validator

@@ -18,6 +18,21 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Service\Address\CreateAddress;
+use App\Service\Address\UpdateAddress;
+use App\Service\AddressService;
+use App\Service\TotalVisitsService;
+use App\Service\ValidateLimitDailyService;
+use App\Service\Visits\CreateVisit;
+use App\Service\Visits\GetVisits;
+use App\Service\Visits\GroupedVisit;
+use App\Service\Visits\RemaningVisit;
+use App\Service\Visits\UpdateVisit;
+use App\Service\VisitService;
+use App\Service\Workday\GetWorkday;
+use App\Service\Workday\LimitWorkday;
+use App\Service\Workday\UpdateWorkday;
+use App\Service\WorkdayService;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Datasource\FactoryLocator;
@@ -116,7 +131,34 @@ class Application extends BaseApplication
      * @return void
      * @link https://book.cakephp.org/4/en/development/dependency-injection.html#dependency-injection
      */
-    public function services(ContainerInterface $container): void {}
+
+    public function services(ContainerInterface $container): void
+    {
+        $container->add(LimitWorkday::class);
+        $container->add(GroupedVisit::class);
+        $container->add(CreateAddress::class);
+        $container->add(GetVisits::class);
+        $container->add(GetWorkday::class);
+
+        $container->add(CreateVisit::class)
+            ->addArgument(CreateAddress::class)
+            ->addArgument(UpdateWorkday::class);
+
+        $container->add(UpdateVisit::class)
+            ->addArgument(UpdateAddress::class)
+            ->addArgument(UpdateWorkday::class);
+
+
+        $container->add(RemaningVisit::class)
+            ->addArgument(UpdateWorkday::class)
+            ->addArgument(LimitWorkday::class);
+
+        $container->add(UpdateWorkday::class)
+            ->addArgument(GroupedVisit::class);
+
+        $container->add(UpdateAddress::class)
+            ->addArgument(CreateAddress::class);
+    }
 
     /**
      * Bootstrapping for CLI application.
