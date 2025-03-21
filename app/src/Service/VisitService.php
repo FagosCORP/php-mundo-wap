@@ -123,31 +123,37 @@ class VisitService
     private function allocateVisits(array $visits, Chronos $startDate): array
     {
         $results = [];
+
         foreach ($visits as $visit) {
-            $currentDate = clone $startDate;
-            $maxAttempts = 30;
-            $allocated = false;
+            $availableDate = $this->findNextAvailableDate($visit, $startDate);
 
-            for ($i = 0; $i < $maxAttempts; $i++) {
-                $hasLimitDaily = !$this->workdayService->notHasLimitDaily($currentDate->toDateString(), $visit->duration);
-
-                if ($hasLimitDaily) {
-                    $visit->date = $currentDate;
-
-                    $this->visits->save($visit);
-                    $results[] = ['id' => $visit->id, 'new_date' => $currentDate->format('Y-m-d')];
-                    $allocated = true;
-                    break;
-                }
-                $currentDate = $currentDate->addDays(1);
-            }
-
-            if (!$allocated) {
+            if (!$availableDate) {
                 throw new Exception("Não foi possível alocar a visita {$visit->id} em 30 dias.");
             }
+
+            $visit->date = $availableDate;
+            $this->visits->save($visit);
+            $results[] = ['id' => $visit->id, 'new_date' => $availableDate->format('Y-m-d')];
         }
+
         $this->workdayService->updateWorkday($startDate->subDays(1)->toDateString());
         return $results;
+    }
+
+    private function findNextAvailableDate($visit, Chronos $startDate): ?Chronos
+    {
+        $currentDate = clone $startDate;
+
+        $maxAttempts = 30;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $hasLimitDaily = !$this->workdayService->notHasLimitDaily($currentDate->toDateString(), $visit->duration);
+            if ($hasLimitDaily) {
+                return $currentDate;
+            }
+            $currentDate = $currentDate->addDays(1);
+        }
+
+        return null;
     }
 
     public function countTotalVisits(string $date)
