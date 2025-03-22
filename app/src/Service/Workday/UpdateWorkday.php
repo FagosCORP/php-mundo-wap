@@ -48,7 +48,10 @@ class UpdateWorkday
             ['date' => $date],
             function ($entity) use ($date) {
                 $entity->date = $date;
-            }
+            },
+            [
+                'accessibleFields' => ['duration' => true]
+            ]
         );
     }
     public function executeOnlyVisits(string $date): void
@@ -57,7 +60,7 @@ class UpdateWorkday
         $completeCount = $this->groupedVisit->completedCount($date);
 
         if (!$completeCount) {
-            return;
+            $this->workdays->deleteAll(['date' => $date]);
         }
 
         $workday = $this->defineEntity($date);
@@ -68,15 +71,16 @@ class UpdateWorkday
     private function syncWorkDay(string $date): void
     {
         $date = $this->normalizeDate($date);
-        $totalCount = $this->groupedVisit->totalCount($date);
+        $completeCount = $this->groupedVisit->completedCount($date);
 
-        if (!$totalCount) {
+        if (!$completeCount) {
+            $this->workdays->deleteAll(['date' => $date]);
             return;
         }
 
         $workday = $this->defineEntity($date);
-        $workday->visits = $totalCount;
-        $workday->completed = $this->groupedVisit->completedCount($date);
+        $workday->visits = $this->groupedVisit->totalCount($date);
+        $workday->completed = $completeCount;
         $workday->duration = $this->groupedVisit->completedDuration($date);
 
         $this->workdays->saveOrFail($workday);

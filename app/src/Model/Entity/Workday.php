@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -27,8 +28,8 @@ class Workday extends Entity
      */
     protected $_accessible = [
         'date' => true,
-        'visits' => true,
-        'completed' => true,
-        'duration' => true,
+        'visits' => false,
+        'completed' => false,
+        'duration' => false,
     ];
 }

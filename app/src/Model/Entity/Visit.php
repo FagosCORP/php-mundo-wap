@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -29,12 +30,13 @@ class Visit extends Entity
      *
      * @var array<string, bool>
      */
+
     protected $_accessible = [
         'date' => true,
         'completed' => true,
         'forms' => true,
         'products' => true,
-        'duration' => true,
+        'duration' => false,
         'address_id' => true,
         'address' => true,
     ];

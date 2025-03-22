@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\Visits;
 
-use App\Controller\Utils\Visit\Calculate;
 use App\Model\Entity\Visit;
 use App\Model\Table\VisitsTable;
 use App\Service\Address\CreateAddress;
+use App\Service\Utils\Visit\Calculate;
 use App\Service\Workday\UpdateWorkday;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
@@ -39,12 +39,19 @@ class CreateVisit
                 $data['products'] ?? 0
             );
 
-            $visit = $this->visits->newEntity($visitData);
+            $visit = $this->visits->newEntity(
+                $visitData,
+                [
+                    'accessibleFields' => ['duration' => true]
+                ]
+            );
             $this->visits->saveOrFail($visit);
 
             if (Hash::check($data, 'address')) {
+                $data['address']['foreign_table'] = 'visits';
                 $this->createAddress->execute($visit->id, $data['address']);
             }
+
             $this->updateWorkday->execute($data['date']);
             return $visit;
         });

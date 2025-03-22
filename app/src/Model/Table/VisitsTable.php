@@ -31,8 +31,7 @@ class VisitsTable extends Table
 
         $this->hasOne('Addresses')
             ->setClassName('Addresses')
-            ->setForeignKey('foreign_id')
-            ->setConditions(['Addresses.foreign_table' => 'visits']);
+            ->setForeignKey('foreign_id');
     }
 
     public function beforeSave($event, $entity, $options): bool

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -33,8 +34,8 @@ class Address extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'foreign_table' => true,
-        'foreign_id' => true,
+        'foreign_table' => false,
+        'foreign_id' => false,
         'postal_code' => true,
         'state' => true,
         'city' => true,
@@ -42,6 +43,6 @@ class Address extends Entity
         'street' => true,
         'street_number' => true,
         'complement' => true,
-        'visits' => true,
+        'visits' => false,
     ];
 }

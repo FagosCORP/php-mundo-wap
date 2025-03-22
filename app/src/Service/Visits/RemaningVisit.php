@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service\Visits;
 
-use App\Model\Entity\Visit;
 use App\Model\Table\VisitsTable;
 use App\Service\Workday\LimitWorkday;
 use App\Service\Workday\UpdateWorkday;
@@ -75,7 +74,7 @@ class RemaningVisit
         }
 
         foreach ($visits as $visit) {
-
+            $visit->setAccess('duration', true);
             $visit->date = $availableDate;
             $this->visits->saveOrFail($visit);
             $results[] = [

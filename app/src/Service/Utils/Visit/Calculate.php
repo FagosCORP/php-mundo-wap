@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller\Utils\Visit;
+namespace App\Service\Utils\Visit;
 
 class Calculate
 {

@@ -31,8 +31,6 @@ class WorkdaysController extends AppController
 
         $validator = $this->Workdays->validationDateParam(new Validator());
         $errors = $validator->validate(['date' => $date]);
-
-        $errors = $this->validateRequest($validator);
         if (!empty($errors)) {
             return $this->validationErrorResponse($errors);
         }

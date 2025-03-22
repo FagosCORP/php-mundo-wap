@@ -49,9 +49,14 @@ class CreateAddress
         $this->appendCepData($data);
         $data = Hash::merge($data, [
             'foreign_id' => $visitId,
-            'foreign_table' => 'visits'
+            'foreign_table' => Hash::get($data, 'foreign_table', '')
         ]);
-        $address = $addressesTable->newEntity($data);
+        $address = $addressesTable->newEntity($data, [
+            'accessibleFields' => [
+                'foreign_id' => true,
+                'foreign_table' => true,
+            ]
+        ]);
 
         return $addressesTable->saveOrFail($address);
     }
