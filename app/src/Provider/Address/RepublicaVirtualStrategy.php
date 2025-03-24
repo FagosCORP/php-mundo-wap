@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Service\Provider;
+namespace App\Provider\Address;
+
 
 use Cake\Http\Client;
 use Cake\Utility\Hash;

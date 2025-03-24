@@ -59,4 +59,3 @@ class VisitsController extends AppController
         );
     }
 }
-

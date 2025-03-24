@@ -3,6 +3,7 @@
 namespace App\Controller\Traits;
 
 use App\Controller\Enum\HttpStatusCode\HttpStatusCode;
+use App\Exceptions\AllocationException;
 use App\Exceptions\CepNotFoundException;
 use App\Exceptions\LimitHoursDailyException;
 use Cake\Http\Response;
@@ -38,9 +39,10 @@ trait ApiResponseTrait
     {
         try {
             return $this->successResponse($operation());
-        } catch (CepNotFoundException | LimitHoursDailyException $e) {
+        } catch (CepNotFoundException | AllocationException | LimitHoursDailyException $e) {
             return $this->errorResponse($e->getMessage());
         } catch (\Throwable $e) {
+            var_dump($e);
             return $this->errorResponse('Erro interno do servidor', HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }

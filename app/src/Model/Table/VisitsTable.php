@@ -29,6 +29,11 @@ class VisitsTable extends Table
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
 
+        $this->belongsTo('Workdays')
+            ->setClassName('Workdays')
+            ->setForeignKey('date')
+            ->setBindingKey('date');
+
         $this->hasOne('Addresses')
             ->setClassName('Addresses')
             ->setForeignKey('foreign_id');
@@ -47,7 +52,7 @@ class VisitsTable extends Table
         }
 
         if (!$haveLimit) {
-            throw new LimitHoursDailyException();
+            throw new LimitHoursDailyException("Limite de horas antigidos para essa data.");
         }
 
         return true;

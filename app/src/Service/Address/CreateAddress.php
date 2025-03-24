@@ -6,9 +6,9 @@ namespace App\Service\Address;
 
 use App\Exceptions\CepNotFoundException;
 use App\Model\Entity\Address;
-use App\Service\Provider\CepProvider;
-use App\Service\Provider\RepublicaVirtualStrategy;
-use App\Service\Provider\ViaCepStrategy;
+use App\Provider\Address\CepProvider;
+use App\Provider\Address\RepublicaVirtualStrategy;
+use App\Provider\Address\ViaCepStrategy;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
 
@@ -30,7 +30,7 @@ class CreateAddress
         $cepData = $this->fetchCepData($data['postal_code']);
 
         if (!$cepData) {
-            throw new CepNotFoundException();
+            throw new CepNotFoundException('Cep não encontrado.');
         }
 
         $fields = ['sublocality', 'street', 'city', 'state'];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Visits;
 
+use App\Exceptions\AllocationException;
 use App\Model\Table\VisitsTable;
 use App\Service\Workday\LimitWorkday;
 use App\Service\Workday\UpdateWorkday;
@@ -62,26 +63,28 @@ class RemaningVisit
     private function allocate(array $visits, Chronos $startDate): array
     {
         $results = [];
-
         $availableDate = $this->findOpenDate(reset($visits)->duration, $startDate);
 
         if ($availableDate == $startDate) {
-            throw new Exception("Todas visitas já estão alocadas para {$startDate->toDateString()}");
+            throw new AllocationException('Todas visitas já estão alocadas nessa data.');
         }
 
         if (!$availableDate) {
-            throw new Exception("Não foi possível alocar a visitas pendentes em 30 dias.");
+            throw new AllocationException("Não foi possível alocar as visitas pendentes em 120 dias.");
         }
 
-        foreach ($visits as $visit) {
-            $visit->setAccess('duration', true);
-            $visit->date = $availableDate;
-            $this->visits->saveOrFail($visit);
-            $results[] = [
+        $this->visits->updateAll(
+            ['date' => $availableDate->toDateString()],
+            ['id IN' => collection($visits)->extract('id')->toList()]
+        );
+
+        $results = collection($visits)->map(function ($visit) use ($availableDate) {
+            return [
                 'id' => $visit->id,
                 'new_date' => $availableDate->format('Y-m-d')
             ];
-        }
+        })->toList();
+
         $this->updateWorkday->executeOnlyVisits($startDate->toDateString());
         return $results;
     }

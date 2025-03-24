@@ -62,7 +62,7 @@ class UpdateVisit
                 $data['address']['foreign_table'] = 'visits';
                 $this->updateAddress->execute($visit->id, $data['address']);
             }
-
+            $this->visits->loadInto($visit, ['Addresses']);
             return $visit;
         });
     }

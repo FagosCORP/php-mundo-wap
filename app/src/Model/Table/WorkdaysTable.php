@@ -33,6 +33,12 @@ class WorkdaysTable extends Table
         $this->setTable('workdays');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
+
+        $this->hasMany('Visits')
+            ->setClassName('Visits')
+            ->setForeignKey('date')
+            ->setBindingKey('date')
+            ->setProperty('related_visits');
     }
 
     public function validationDefault(Validator $validator): Validator

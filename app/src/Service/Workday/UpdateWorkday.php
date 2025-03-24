@@ -41,9 +41,6 @@ class UpdateWorkday
 
     private function defineEntity(string $date): Workday
     {
-        // disclaimer -> aqui ele define ou cria no banco
-        // retornando a entity
-        //
         return $this->workdays->findOrCreate(
             ['date' => $date],
             function ($entity) use ($date) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Provider;
+namespace App\Provider\Address;
 
 interface ICepGatewayStrategy
 {

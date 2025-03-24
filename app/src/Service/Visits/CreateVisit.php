@@ -53,6 +53,8 @@ class CreateVisit
             }
 
             $this->updateWorkday->execute($data['date']);
+
+            $this->visits->loadInto($visit, ['Addresses']);
             return $visit;
         });
     }

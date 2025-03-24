@@ -1,0 +1,520 @@
+{
+    "swagger": "2.0",
+  "info": {
+    "title": "Mundowap API",
+    "version": "1.0.0",
+    "description": "API para gestão de visitas e dias de trabalho.\n\n
+      **Padrão de projeto:** MVC\n\n
+      **Adicionar rotas:**\n
+      - Arquivo: `routes.php`\n
+      - Pode ser adicionada por escopo de rotas e métodos.\n\n
+
+      **Injetar uma dependência em alguns serviços:**\n
+      - Arquivo: `application.php`\n
+      - Método: `services`\n\n
+      **Entendendo a estrutura de pastas + regra de negócio:**\n\n
+
+      **Controllers:**\n
+      - Ponte para receber a requisição e enviar para os services processarem.\n\n
+
+      **Controllers/Traits:**\n
+      - Utilitário para formatação e captura de erros.\n
+      - Possui métodos prontos para respostas de sucesso.\n
+      - Utiliza um enum de status code HTTP.\n
+      - Possui um `handle` que executa processos com segurança, capturando exceptions específicas e formatando a resposta.\n\n
+
+      **Services/Model:**\n
+      - Separada por pastas de referente a cada model|action que está realizando.\n
+      - Aramazena as regras de negócio é chamada pela controller.\n
+      - Possui métodos para aplicar a regra de negócio.\n
+      - Possui o registro da tabela de referencia para executar os métodos.\n
+      - Possui o registro da tabela de referencia para executar os métodos.\n
+      - Utiliza um enum de status code HTTP.\n
+      - Possui um `handle` que executa processos com segurança, capturando exceptions específicas e formatando a resposta.\n\n
+
+      **Services/Utils:**\n
+      - Utilitário referente a cada Utils|Model|Action que está realizando.\n
+      - Possui funçoes que são utilizadas por mais de Action.\n
+
+      **Services/Providers:**\n
+      - Utilitário referente a cada Utils|Model| que está realizando.\n
+      - Possui provedores de serviços que são utilizadas por mais de Action.\n
+      - No caso do Cep foi utilizado o Padrão strategy para realizar a tentativa caso não encontre no primeiro.\n
+
+      **Model/Entity:**\n
+        - Verifica quais campos podem sofrer atualização
+        - Verifica quais campos podem ser retornados
+        - Manipulação de entitidades
+
+      **Model/Table:**\n
+        - Verificacoes antes de salvar
+        - Verifica quais campos podem ser retornados
+        - Relacionamentos
+
+      **Visits:**\n
+      - Possui métodos:\n
+        - **ByDate:** Valida a request, verifica e retorna as visitas pela data específica.\n
+        - **Edit:** Recebe `id` no `queryParam` e os dados. Valida a request e chama pelo `handleServiceCall`, forma segura de retornar e executar.\n
+          - Chama os services.\n
+          - Inicia o transactional.\n
+          - Separa os dados.\n
+          - Antes de salvar, o `beforeSave` verifica se no `workdays` essa data está aceitando o tempo enviado conforme o cálculo.\n
+          - Salva a visita.\n
+          - Verifica se a nova data é diferente da atual.\n
+          - Executa o `workdays` em uma ou nas duas datas, dependendo da situação:\n
+            - Trata a data.\n
+            - Verifica se nas visitas realmente há alguma completa com essa data.\n
+            - Busca se não encontrar a `workdays`, cria-se.\n
+            - Busca os dados agrupados pela data em `visits`.\n
+          - Atualiza o endereço conforme a regra e cria a `fk`.\n
+          - Retorna a visita atualizada.\n
+        - **Create:** Valida a request e chama pelo `handleServiceCall`, forma segura de retornar e executar.\n
+          - Inicia o transactional.\n
+          - Separa os dados.\n
+          - Antes de salvar, o `beforeSave` verifica se no `workdays` essa data está aceitando o tempo enviado conforme o cálculo.\n
+          - Salva a visita.\n
+          - Executa o `workdays` em uma ou nas duas datas, dependendo da situação:\n
+            - Trata a data.\n
+            - Verifica se nas visitas realmente há alguma completa com essa data.\n
+            - Busca se não encontrar a `workdays`, cria-se.\n
+            - Busca os dados agrupados pela data em `visits`.\n
+          - Atualiza o endereço conforme a regra e cria a `fk`.\n\n
+
+      **Workdays:**\n
+      - Possui métodos:\n
+        - **index:** Valida a request, verifica e retorna as `workdays`.\n
+        - **closeDay:** Valida a request e chama pelo `handleServiceCall`, forma segura de retornar e executar.\n
+          - Inicia o transactional.\n
+          - Separa os dados:\n
+            - As visitas pendentes do dia enviado.\n
+            - Executa o processo de `Remaining` ou `Allocate`, dependendo do caso:\n
+              - Busca uma data que suporte as visitas pendentes em até 120 dias.\n
+              - Percorre essas visitas pendentes.\n
+              - Salva ou falha.\n
+              - Atualiza a data da visita pendente.\n
+              - Atualiza a `workdays` da data enviada, alterando somente o campo de visitas totais."
+  },
+    "host": "localhost:13001",
+    "basePath": "/",
+    "schemes": ["http"],
+    "paths": {
+        "/visits/by-date": {
+            "get": {
+                "tags": ["Visits"],
+                "summary": "Listar visitas por data",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-30"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de visitas no período",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/VisitResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "data": [
+                                    {
+                                        "id": 1,
+                                        "date": "2025-03-10",
+                                        "forms": 5,
+                                        "products": 3,
+                                        "completed": true,
+                                        "duration": 120
+                                    },
+                                    {
+                                        "id": 2,
+                                        "date": "2025-03-15",
+                                        "forms": 8,
+                                        "products": 7,
+                                        "completed": false,
+                                        "duration": 155
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parâmetros inválidos",
+                        "examples": {
+                            "application/json": {
+                                "error": "Datas devem estar no formato YYYY-MM-DD"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nenhuma visita encontrada",
+                        "examples": {
+                            "application/json": {
+                                "error": "Nenhuma visita encontrada no período especificado"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/visits/{id}": {
+            "put": {
+                "tags": ["Visits"],
+                "summary": "Atualizar uma visita",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "integer",
+                        "example": 12
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/VisitCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Visita atualizada com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/VisitResponse"
+                        },
+                        "examples": {
+                            "application/json": {
+                                "data": {
+                                    "id": 12,
+                                    "date": "2025-03-29",
+                                    "forms": 8,
+                                    "products": 7,
+                                    "completed": false,
+                                    "duration": 155
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inválidos",
+                        "examples": {
+                            "application/json": {
+                                "error": "O campo 'forms' deve ser um número positivo"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Visita não encontrada",
+                        "examples": {
+                            "application/json": {
+                                "error": "Visita com ID 12 não encontrada"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/visits": {
+            "post": {
+                "tags": ["Visits"],
+                "summary": "Criar nova visita",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/VisitCreate"
+                        },
+                        "examples": {
+                            "application/json": {
+                                "date": "2025-03-29",
+                                "forms": 8,
+                                "products": 7,
+                                "completed": 1,
+                                "address": {
+                                    "postal_code": "33172200",
+                                    "sublocality": "Centro",
+                                    "street": "Rua Principal",
+                                    "street_number": "123",
+                                    "complement": "Apto 101"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Visita criada com sucesso",
+                        "schema": {
+                            "$ref": "#/definitions/VisitResponse"
+                        },
+                        "examples": {
+                            "application/json": {
+                                "data": {
+                                    "id": 12,
+                                    "date": "2025-03-29",
+                                    "forms": 8,
+                                    "products": 7,
+                                    "completed": false,
+                                    "duration": 155
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "examples": {
+                            "application/json": {
+                                "error": "O CEP deve conter 8 dígitos"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/workdays/close-day": {
+            "post": {
+                "tags": ["Workdays"],
+                "summary": "Fechar dia de trabalho",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                "observations": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["date"]
+                        },
+                        "examples": {
+                            "application/json": {
+                                "date": "2025-03-20",
+                                "observations": "Dia com alta produtividade"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dia fechado com sucesso",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": ["fechado"]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "data": {
+                                    "id": 5,
+                                    "date": "2025-03-20",
+                                    "status": "fechado"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflito",
+                        "examples": {
+                            "application/json": {
+                                "error": "O dia já está fechado"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/workdays": {
+            "get": {
+                "tags": ["Workdays"],
+                "summary": "Listar dias de trabalho",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "type": "string",
+                        "enum": ["aberto", "fechado"],
+                        "description": "Filtrar por status"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de dias de trabalho",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/Workday"
+                                    }
+                                }
+                            }
+                        },
+                        "examples": {
+                            "application/json": {
+                                "data": [
+                                    {
+                                        "id": 1,
+                                        "date": "2025-03-01",
+                                        "status": "fechado"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "date": "2025-03-02",
+                                        "status": "aberto"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Parâmetro inválido",
+                        "examples": {
+                            "application/json": {
+                                "error": "Status deve ser 'aberto' ou 'fechado'"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "VisitCreate": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "forms": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "products": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "completed": {
+                    "type": "integer",
+                    "enum": [0, 1]
+                },
+                "address": {
+                    "$ref": "#/definitions/Address"
+                }
+            },
+            "required": ["date", "forms", "products", "address"]
+        },
+        "VisitResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "date": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "forms": {
+                            "type": "integer"
+                        },
+                        "products": {
+                            "type": "integer"
+                        },
+                        "completed": {
+                            "type": "boolean"
+                        },
+                        "duration": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    "required": ["id", "date", "forms", "products"]
+                }
+            }
+        },
+        "Workday": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": ["aberto", "fechado"]
+                },
+                "observations": {
+                    "type": "string"
+                }
+            },
+            "required": ["date", "status"]
+        },
+        "Address": {
+            "type": "object",
+            "properties": {
+                "postal_code": {
+                    "type": "string",
+                    "pattern": "^\\d{8}$"
+                },
+                "sublocality": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "street_number": {
+                    "type": "string"
+                },
+                "complement": {
+                    "type": "string"
+                }
+            },
+            "required": ["postal_code", "street", "street_number"]
+        }
+    }
+}

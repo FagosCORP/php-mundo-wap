@@ -9,5 +9,5 @@ use Cake\Http\Exception\HttpException;
 class AllocationException extends HttpException
 {
     protected $_defaultCode = 409;
-    protected $message = 'Falha ao realocar visitas';
+    protected $message = 'Todas visitas já estão alocadas nessa data.';
 }
