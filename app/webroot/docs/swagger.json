@@ -287,35 +287,19 @@
             }
         },
         "/workdays/close-day": {
-            "post": {
-                "tags": ["Workdays"],
-                "summary": "Fechar dia de trabalho",
+            "get": {
                 "parameters": [
                     {
-                        "in": "body",
-                        "name": "body",
+                        "name": "date",
+                        "in": "query",
                         "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "date": {
-                                    "type": "string",
-                                    "format": "date"
-                                },
-                                "observations": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": ["date"]
-                        },
-                        "examples": {
-                            "application/json": {
-                                "date": "2025-03-20",
-                                "observations": "Dia com alta produtividade"
-                            }
-                        }
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-30"
                     }
                 ],
+                "tags": ["Workdays"],
+                "summary": "Fechar dia de trabalho",
                 "responses": {
                     "200": {
                         "description": "Dia fechado com sucesso",
@@ -370,8 +354,6 @@
                         "name": "status",
                         "in": "query",
                         "type": "string",
-                        "enum": ["aberto", "fechado"],
-                        "description": "Filtrar por status"
                     }
                 ],
                 "responses": {
