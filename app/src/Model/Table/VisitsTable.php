@@ -28,7 +28,6 @@ class VisitsTable extends Table
         $this->setTable('visits');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
-
         $this->belongsTo('Workdays')
             ->setClassName('Workdays')
             ->setForeignKey('date')
@@ -57,6 +56,7 @@ class VisitsTable extends Table
 
         return true;
     }
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator

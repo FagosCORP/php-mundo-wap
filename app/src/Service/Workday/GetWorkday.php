@@ -20,23 +20,9 @@ class GetWorkday
     public function getAll(): ResultSet
     {
         return $this->workdays->find()
-            ->select([
-                'Workdays.id',
-                'Workdays.date',
-                'Workdays.visits',
-                'Workdays.completed',
-                'Workdays.duration'
+            ->contain([
+                'Visit' => 'Addresses'
             ])
-            ->matching('Visits', function ($q) {
-                return $q->select([
-                    'Visits.id',
-                    'Visits.date',
-                    'Visits.completed',
-                    'Visits.forms',
-                    'Visits.products',
-                    'Visits.duration'
-                ])
-                    ->where(['Visits.date = Workdays.date']);
-            })->all();
+            ->all();
     }
 }

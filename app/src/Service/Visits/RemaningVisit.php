@@ -12,7 +12,6 @@ use Cake\Chronos\Chronos;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-use Exception;
 
 class RemaningVisit
 {

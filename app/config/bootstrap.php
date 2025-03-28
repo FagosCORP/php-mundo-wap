@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -76,6 +77,7 @@ use Cake\Utility\Security;
  * idea to create multiple configuration files, and separate the configuration
  * that changes from configuration that does not. This makes deployment simpler.
  */
+
 try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
@@ -212,6 +214,7 @@ ServerRequest::addDetector('tablet', function ($request) {
 
 // There is no time-specific type in Cake
 TypeFactory::map('time', StringType::class);
+TypeFactory::map('date', StringType::class);
 
 /*
  * Custom Inflector rules, can be set to correctly pluralize or singularize
