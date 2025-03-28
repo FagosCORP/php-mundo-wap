@@ -9,6 +9,7 @@ use App\Model\Entity\Visit;
 use App\Model\Table\VisitsTable;
 use App\Service\Address\UpdateAddress;
 use App\Service\Workday\UpdateWorkday;
+use Cake\Chronos\Chronos;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
@@ -28,6 +29,11 @@ class UpdateVisit
         $this->updateWorkday = $updateWorkday;
     }
 
+    private function normalizeDate(string $date): string
+    {
+        return Chronos::parse($date)->toDateString();
+    }
+
     public function execute(int $id, array $data): Visit
     {
         $connection = ConnectionManager::get('default');
@@ -36,7 +42,7 @@ class UpdateVisit
             $visit = $this->visits->get($id);
 
             $newDate = Hash::get($data, 'date');
-            $oldDate = $visit->date->toDateString();
+            $oldDate = $this->normalizeDate($visit->date);
 
             if (Hash::contains($data, ['forms', 'products'])) {
                 $data['duration'] = Calculate::duration(
